@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
@@ -8,6 +9,7 @@ const bcrypt = require("bcryptjs");
 const User = require("./models/User");
 const cors = require("cors");
 const app = express();
+const jwt = require("jsonwebtoken");
 
 const PORT = process.env.PORT || 3000;
 
@@ -17,28 +19,8 @@ app.use(
   cors({
     origin: "http://127.0.0.1:5500", // Allow frontend origin
     credentials: true, // Allow cookies to be sent
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-// Express session middleware
-app.use(
-  session({
-    secret: "123", // Replace with a strong secret key
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: false, // Set to true if using HTTPS
-      httpOnly: true,
-      sameSite: "lax",
-    },
-  })
-);
-
-// Initialize Passport and use session
-app.use(passport.initialize());
-app.use(passport.session());
 
 // MongoDB Connection
 mongoose
@@ -52,75 +34,6 @@ mongoose
   .catch((err) => {
     console.error("Error connecting to MongoDB:", err);
   });
-
-// Passport Local Strategy (for normal login)
-passport.use(
-  new LocalStrategy(
-    { usernameField: "email" }, // Use 'email' as the username field
-    async (email, password, done) => {
-      try {
-        const user = await User.findOne({ email });
-        if (!user) {
-          return done(null, false, { message: "Incorrect email." });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-          return done(null, false, { message: "Incorrect password." });
-        }
-
-        return done(null, user);
-      } catch (err) {
-        return done(err);
-      }
-    }
-  )
-);
-
-// Passport Google OAuth strategy
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: "YOUR_GOOGLE_CLIENT_ID", // Replace with your Google Client ID
-      clientSecret: "YOUR_GOOGLE_CLIENT_SECRET", // Replace with your Google Client Secret
-      callbackURL: "/auth/google/callback",
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        let user = await User.findOne({ googleId: profile.id });
-
-        if (!user) {
-          user = new User({
-            googleId: profile.id,
-            name: profile.displayName,
-            email: profile.emails[0].value,
-          });
-          await user.save();
-        }
-
-        return done(null, user);
-      } catch (err) {
-        return done(err);
-      }
-    }
-  )
-);
-
-passport.serializeUser((user, done) => {
-  console.log("Serializing user:", user);
-  done(null, user.id); // Store user ID in the session
-});
-
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    console.log("Deserializing user:", user);
-    done(null, user);
-  } catch (err) {
-    console.error("Deserialization error:", err);
-    done(err);
-  }
-});
 
 // Basic Route
 app.get("/", (req, res) => {
@@ -176,41 +89,51 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Login route for normal email/password users
-app.post("/login", (req, res, next) => {
-  passport.authenticate("local", (err, user, info) => {
-    if (err) {
-      console.error("Error in passport.authenticate:", err);
-      return next(err);
-    }
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
     if (!user) {
-      console.log("Authentication failed, user not found");
-      return res.status(401).send("Login failed");
+      return res.status(400).send("Cannot find user");
     }
-    req.logIn(user, (err) => {
-      if (err) {
-        console.error("Error in req.logIn:", err);
-        return next(err);
-      }
-      req.session.save((err) => {
-        if (err) {
-          console.error("Error saving session:", err);
-          return next(err);
-        }
-        console.log("User after login:", user);
-        return res.send("Login successful");
-      });
+
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(400).send("Invalid credentials");
+    }
+
+    const accessToken = jwt.sign(
+      { userId: user._id },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.status(200).json({
+      accessToken: accessToken,
+      user: {
+        name: user.name,
+        email: user.email,
+        tasks: user.tasks,
+      },
     });
-  })(req, res, next);
+  } catch (error) {
+    console.error("Server error during login:", error);
+    res.status(500).send("Server error during login.");
+  }
 });
+
 // Logout Route
 app.get("/logout", (req, res) => {
   req.logout();
   res.redirect("/");
 });
 app.get("/test-auth", (req, res) => {
-  console.log("Session in test-auth:", req.session);
-  console.log("User in test-auth:", req.user);
+  console.log("Full session object:", JSON.stringify(req.session, null, 2));
+  console.log("Session ID:", req.sessionID);
+  console.log("Is authenticated:", req.isAuthenticated());
+  console.log("User in request:", req.user);
+  console.log("Passport in session:", req.session.passport);
   if (req.isAuthenticated()) {
     res.json({ message: "You are authenticated", user: req.user });
   } else {
@@ -231,39 +154,48 @@ app.get("/users", async (req, res) => {
 
 //TASK PART
 // Route to add a task
+// Route to add a task
 app.post("/addTask", async (req, res) => {
-  console.log("Authenticated:", req.isAuthenticated()); // Should be true
-  console.log("User in addTask:", req.user); // Debugging line to check if user is populated
-  if (!req.isAuthenticated()) {
-    return res.status(401).send("Unauthorized");
-  }
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
 
-  const { time, task } = req.body;
-  const userId = req.user.id;
+  if (!token) return res.status(401).send("Unauthorized");
 
   try {
-    const user = await User.findById(userId);
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
     if (user.tasks.length >= 5) {
       return res.status(400).send("Task limit reached.");
     }
+    const { time, task } = req.body;
     user.tasks.push({ time, task });
     await user.save();
     res.status(200).send(user.tasks);
   } catch (error) {
+    console.error("Error adding task:", error);
     res.status(500).send("Error adding task");
   }
 });
 
 // Route to get tasks for the logged-in user
 app.get("/getTasks", async (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).send("Unauthorized");
-  }
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) return res.status(401).send("Unauthorized");
 
   try {
-    const user = await User.findById(req.user.id);
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
     res.status(200).send(user.tasks);
   } catch (error) {
+    console.error("Error retrieving tasks:", error);
     res.status(500).send("Error retrieving tasks");
   }
 });

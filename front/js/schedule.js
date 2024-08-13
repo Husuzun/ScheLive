@@ -1,26 +1,15 @@
 $(document).ready(function () {
-  $.ajaxSetup({
-    xhrFields: {
-      withCredentials: true,
-    },
-  });
-  // Check if the user is authenticated
-  $.ajax({
-    type: "GET",
-    url: "http://localhost:3000/test-auth",
-    xhrFields: {
-      withCredentials: true,
-    },
-    success: function (response) {
-      console.log("Authentication test response:", response);
-    },
-    error: function (error) {
-      console.log("Authentication test failed:", error.responseText);
-    },
-  });
+  const token = localStorage.getItem("accessToken");
+
+  if (!token) {
+    alert("You need to log in first.");
+    return;
+  }
+
+  generateTimeSlots();
+  loadTasks();
 
   function generateTimeSlots() {
-    // Generate time slots for the day (e.g., 8 AM to 12 PM)
     const startHour = 8;
     const endHour = 12;
     const scheduleBody = document.getElementById("scheduleBody");
@@ -45,11 +34,17 @@ $(document).ready(function () {
 
   function loadTasks() {
     // Load existing tasks
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      alert("You need to log in first.");
+      return;
+    }
     $.ajax({
       type: "GET",
       url: "http://localhost:3000/getTasks",
-      xhrFields: {
-        withCredentials: true,
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
       success: function (tasks) {
         tasks.forEach((task) => {
@@ -71,11 +66,11 @@ $(document).ready(function () {
     $.ajax({
       type: "POST",
       url: "http://localhost:3000/addTask",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       data: JSON.stringify({ time, task }),
       contentType: "application/json",
-      xhrFields: {
-        withCredentials: true,
-      },
       success: function (tasks) {
         $(`td[data-time='${time}']`).text(task);
         $("#taskModal").modal("hide");

@@ -23,9 +23,11 @@ $(document).ready(function () {
       data: JSON.stringify({ email, password }),
       contentType: "application/json",
       success: function (response) {
-        console.log("Login successful response:", response); // Check this log in the console
+        console.log("Login successful response:", response); //
         $("#loginModal").modal("hide");
-        // window.location.href = "/front"; // Redirect to the home page or wherever you'd like
+
+        localStorage.setItem("accessToken", response.accessToken);
+        window.location.href = "/front";
       },
       error: function (xhr, status, error) {
         // Display error message in the modal

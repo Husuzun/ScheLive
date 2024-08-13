@@ -1,0 +1,75 @@
+/* login.css */
+#loginBtn {
+  margin-right: 20px;
+}
+
+.modal-content {
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.modal-header {
+  border-bottom: none;
+}
+
+.close {
+  outline: none;
+}
+
+.btn-block {
+  border-radius: 20px;
+  padding: 10px;
+}
+
+.form-control {
+  border-radius: 20px;
+  padding: 10px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.divider-line {
+  flex-grow: 1;
+  height: 1px;
+  background-color: #ddd;
+}
+
+.divider span {
+  padding: 0 10px;
+  color: #aaa;
+}
+
+.social-login .btn-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-login .btn-block i {
+  margin-right: 10px;
+}
+
+.modal-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-top: none;
+}
+
+.modal-footer p {
+  margin: 5px 0;
+}
+
+.modal-footer a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.modal-footer a:hover {
+  text-decoration: underline;
+}

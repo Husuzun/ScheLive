@@ -19,6 +19,8 @@
 
     <!-- bootstrap core css -->
     <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="css/login.css" />
+
     <style>
       .schedule-table {
         width: 100%;
@@ -94,21 +96,17 @@
                   <a class="nav-link" href="contact.html">Contact Us</a>
                 </li>
               </ul>
-              <div class="quote_btn-container">
-                <form class="form-inline">
-                  <button class="btn nav_search-btn" type="submit">
-                    <i class="fa fa-search" aria-hidden="true"></i>
-                  </button>
-                </form>
-                <a href="">
-                  <i class="fa fa-phone" aria-hidden="true"></i>
-                  <span> Call : +01 123455678990 </span>
-                </a>
+              <div class="login_btn-container">
+                <button class="btn btn-outline-primary" id="loginBtn">
+                  Login
+                </button>
+                <button class="btn btn-primary" id="signupBtn">Sign Up</button>
               </div>
             </div>
           </nav>
         </div>
       </header>
+
       <!-- end header section -->
       <!-- slider section -->
       <section class="slider_section">
@@ -298,37 +296,6 @@
 
       <script src="js/jquery-3.4.1.min.js"></script>
       <script src="js/bootstrap.js"></script>
-      <script>
-        // Generate time slots for the day (e.g., 8 AM to 8 PM)
-        const startHour = 8;
-        const endHour = 20;
-        const scheduleBody = document.getElementById("scheduleBody");
-
-        for (let hour = startHour; hour <= endHour; hour++) {
-          const time = hour < 12 ? `${hour} AM` : `${hour - 12} PM`;
-          const row = document.createElement("tr");
-          row.innerHTML = `
-                <td style="color: white">${time}</td>
-                <td class="schedule-cell" style="color: white" data-time="${time}">Click to add task</td>
-            `;
-          scheduleBody.appendChild(row);
-        }
-
-        // Handle cell click to open modal
-        $(document).on("click", ".schedule-cell", function () {
-          const time = $(this).data("time");
-          $("#taskTime").val(time);
-          $("#taskModal").modal("show");
-        });
-
-        // Handle saving task
-        $("#saveTaskBtn").click(function () {
-          const time = $("#taskTime").val();
-          const task = $("#taskInput").val();
-          $(`td[data-time='${time}']`).text(task);
-          $("#taskModal").modal("hide");
-        });
-      </script>
     </div>
 
     <!-- service section -->
@@ -855,11 +822,168 @@
     </footer>
     <!-- footer section -->
 
+    <!-- Login Modal -->
+    <!-- Login Modal -->
+    <div
+      class="modal fade"
+      id="loginModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="loginModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="loginModalLabel">Login</h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="loginForm">
+              <div class="form-group">
+                <label for="loginEmail">Email address</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="loginEmail"
+                  placeholder="Enter email"
+                />
+              </div>
+              <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="loginPassword"
+                  placeholder="Password"
+                />
+              </div>
+              <p id="loginError"></p>
+              <!-- Error message placeholder -->
+              <button type="submit" class="btn btn-primary btn-block">
+                Login
+              </button>
+            </form>
+            <div class="divider">
+              <hr class="divider-line" />
+              <span>or</span>
+              <hr class="divider-line" />
+            </div>
+            <div class="social-login">
+              <button
+                class="btn btn-outline-primary btn-block"
+                id="googleLoginBtn"
+              >
+                <i class="fa fa-google" aria-hidden="true"></i> Continue with
+                Google
+              </button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <p class="text-muted">
+              Don't have an account? <a href="#">Sign up</a>
+            </p>
+            <p class="text-muted">
+              <a href="#">Forgot your password?</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div
+      class="modal fade"
+      id="signupModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="signupModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="signupModalLabel">Sign Up</h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="signupForm">
+              <div class="form-group">
+                <label for="signupName">Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="signupName"
+                  placeholder="Enter your name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="signupEmail">Email address</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="signupEmail"
+                  placeholder="Enter email"
+                />
+              </div>
+              <div class="form-group">
+                <label for="signupPassword">Password</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="signupPassword"
+                  placeholder="Password"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">
+                Sign Up
+              </button>
+            </form>
+            <div class="divider">
+              <hr class="divider-line" />
+              <span>or</span>
+              <hr class="divider-line" />
+            </div>
+            <div class="social-login">
+              <button
+                class="btn btn-outline-primary btn-block"
+                id="googleSignupBtn"
+              >
+                <i class="fa fa-google" aria-hidden="true"></i> Sign Up with
+                Google
+              </button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <p class="text-muted">
+              Already have an account? <a href="#">Login</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- jQery -->
     <script src="js/jquery-3.4.1.min.js"></script>
     <!-- bootstrap js -->
     <script src="js/bootstrap.js"></script>
     <!-- custom js -->
     <script src="js/custom.js"></script>
+    <script src="js/login.js"></script>
+    <script src="js/signup.js"></script>
+    <script src="js/schedule.js"></script>
   </body>
 </html>

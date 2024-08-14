@@ -11,6 +11,8 @@ const cors = require("cors");
 const app = express();
 const jwt = require("jsonwebtoken");
 
+const MnDB = 'mongodb+srv://huseyinuzuncs:aSs8056moGKb5nIl@schelive.n59aw.mongodb.net/scheLiveDB?retryWrites=true&w=majority&appName=ScheLive'
+
 const PORT = process.env.PORT || 3000;
 
 // Middleware to parse JSON
@@ -24,7 +26,7 @@ app.use(
 
 // MongoDB Connection
 mongoose
-  .connect("mongodb://127.0.0.1:27017/mydatabase", {
+  .connect(MnDB, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })

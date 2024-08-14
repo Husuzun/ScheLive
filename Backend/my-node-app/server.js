@@ -167,11 +167,20 @@ app.post("/addTask", async (req, res) => {
     if (!user) {
       return res.status(404).send("User not found");
     }
-    if (user.tasks.length >= 5) {
-      return res.status(400).send("Task limit reached.");
-    }
+
     const { time, task } = req.body;
-    user.tasks.push({ time, task });
+
+    // Check if the task for the given time already exists
+    const existingTask = user.tasks.find((t) => t.time === time);
+
+    if (existingTask) {
+      // Update the existing task
+      existingTask.task = task;
+    } else {
+      // Add a new task if it doesn't exist
+      user.tasks.push({ time, task });
+    }
+
     await user.save();
     res.status(200).send(user.tasks);
   } catch (error) {

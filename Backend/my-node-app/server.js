@@ -11,8 +11,6 @@ const cors = require("cors");
 const app = express();
 const jwt = require("jsonwebtoken");
 
-const MnDB = 'mongodb+srv://huseyinuzuncs:aSs8056moGKb5nIl@schelive.n59aw.mongodb.net/scheLiveDB?retryWrites=true&w=majority&appName=ScheLive'
-
 const PORT = process.env.PORT || 3000;
 
 // Middleware to parse JSON
@@ -26,7 +24,7 @@ app.use(
 
 // MongoDB Connection
 mongoose
-  .connect(MnDB, {
+  .connect("mongodb://127.0.0.1:27017/mydatabase", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -106,9 +104,12 @@ app.post("/login", async (req, res) => {
     }
 
     const accessToken = jwt.sign(
-      { userId: user._id },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "1h" }
+      {
+        userId: user._id, // Include the user's MongoDB ID
+        email: user.email, // Include the user's email
+      },
+      process.env.ACCESS_TOKEN_SECRET, // Secret key for signing the token
+      { expiresIn: "1h" } // Token expiration time
     );
 
     res.status(200).json({
